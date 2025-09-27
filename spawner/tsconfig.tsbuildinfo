@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/server.ts","./src/customupload/audio-from-video.ts","./src/customupload/audio-to-text.ts","./src/customupload/upload.ts","./src/db/config.ts"],"version":"5.9.2"}
+{"root":["./src/index.ts","./src/customupload/audio-from-video.ts","./src/customupload/audio-to-text.ts","./src/customupload/upload.ts","./src/db/config.ts","./src/db/models/meeting.ts","./src/db/models/summary.ts","./src/db/models/user.ts"],"version":"5.9.2"}

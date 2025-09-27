@@ -4,9 +4,40 @@ import {
   SignedOut,
   SignInButton,
   UserButton,
+  useUser,
 } from "@clerk/clerk-react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Header = () => {
+  const { isSignedIn, user } = useUser();
+  console.log("this is user", user);
+  const navigate = useNavigate();
+  useEffect(() => {
+    const createUserInDB = async () => {
+      if (!isSignedIn) return;
+
+      try {
+        // Call your backend to create the user if not exists
+        await fetch("http://localhost:3001/register-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            clerkId: user.id,
+            email: user.emailAddresses[0].emailAddress,
+          }),
+        });
+
+        // After ensuring user exists in DB, navigate
+        navigate("/dashboard");
+      } catch (err) {
+        console.error("Failed to create user in DB:", err);
+      }
+    };
+
+    createUserInDB();
+  }, [isSignedIn, navigate]);
+
   return (
     <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-b border-border z-50">
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">

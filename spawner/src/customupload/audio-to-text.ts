@@ -81,6 +81,7 @@ async function main() {
     console.log("\n🤖 Summarizing with Gemini...");
     const summary = await summarizeWithGemini(transcription);
     console.log("📊 Summary:\n", summary);
+    // store the summary in database 
   } catch (err) {
     console.error("❌ Error:", err);
   }

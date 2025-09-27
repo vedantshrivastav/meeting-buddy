@@ -3,6 +3,7 @@ import { Options } from 'selenium-webdriver/chrome'
 import cors from 'cors'
 import express from 'express'
 import { connectDb } from './db/config'
+import User from './db/models/user'
 
 
 const app = express()
@@ -169,6 +170,32 @@ async function main(meet_url : string) {
     // wait until admin lets u join
     await startScreenshare(driver);    
 }
+app.post('/register-user',async (req,res) => {
+  const {clerkId,email} = req.body
+  try{
+    //check if the user exists
+    const existing_user = await User.findOne({clerkId})
+    if(existing_user) {
+      res.json({
+        data : existing_user,
+        message : "User already exists"
+      })
+    }
+    // create a new user
+    const new_user = await User.create({
+      clerkId,
+      email
+    })
+    res.json({
+      data : new_user,
+      message : "New user created"
+    })
+  }
+  catch(e){
+     console.error(e)
+     res.status(500).json({message : "Server Error"})
+  }
+})
 app.post('/start-bot',(req,res) => {
     console.log('inside the start bot')
     const {meetUrl} = req.body
