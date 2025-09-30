@@ -21,7 +21,7 @@ export default function Dashboard() {
     await fetch("http://localhost:3001/start-bot", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ meetUrl: meetId }),
+      body: JSON.stringify({ meetUrl: meetId, userId: user.id }),
     });
   };
 

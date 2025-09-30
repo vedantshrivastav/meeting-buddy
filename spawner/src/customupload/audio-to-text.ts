@@ -5,6 +5,8 @@ import axios from "axios";
 import fs from "fs/promises";
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
+import Summary from "../db/models/summary";
+import Meeting from "../db/models/meeting";
 dotenv.config();
 
 const ASSEMBLY_API_KEY = process.env.ASSEMBLY_API_KEY!;
@@ -19,7 +21,9 @@ const assemblyHeaders = {
 // ---------- STEP 1: Transcription ----------
 async function transcribeAudio(path: string): Promise<string> {
   // Upload audio file
-  const audioData = await fs.readFile(path);
+  const response = await fetch(path)
+  const arrayBuffer = await response.arrayBuffer()
+  const audioData  = Buffer.from(arrayBuffer)
   const uploadResponse = await axios.post(
     `${assemblyBaseUrl}/v2/upload`,
     audioData,
@@ -69,12 +73,12 @@ async function summarizeWithGemini(transcribedText: string): Promise<string> {
 }
 
 // ---------- STEP 3: Orchestrator ----------
-async function main() {
+export async function finaltranscribtion(audioURL : string,meeting_id : string) {
   try {
     console.log("🎤 Transcribing audio...");
     console.log("the assembly api key is ",ASSEMBLY_API_KEY)
     const transcription = await transcribeAudio(
-      "./assets/meeting_audio.mp3"
+      audioURL
     );
     console.log("✅ Transcription:\n", transcription);
 
@@ -82,9 +86,13 @@ async function main() {
     const summary = await summarizeWithGemini(transcription);
     console.log("📊 Summary:\n", summary);
     // store the summary in database 
+    await Summary.create({meeting_id,summary})
+    console.log('summary generated in DB')
+    await Meeting.findOneAndUpdate({meetId : meeting_id,status : 
+      "in-progress"
+    },{status : "completed"},{new : true})
   } catch (err) {
     console.error("❌ Error:", err);
   }
 }
 
-main();

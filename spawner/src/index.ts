@@ -4,6 +4,7 @@ import cors from 'cors'
 import express from 'express'
 import { connectDb } from './db/config'
 import User from './db/models/user'
+import Meeting from './db/models/meeting'
 
 
 const app = express()
@@ -51,10 +52,11 @@ async function getDriver() {
 
 
 
-async function startScreenshare(driver: WebDriver) {
+async function startScreenshare(driver: WebDriver , meeting_id : string) {
+  console.log("this is the meeting id from index",meeting_id)
     console.log("startScreensharecalled")
     const response = await driver.executeScript(`
-
+        const meetingId = arguments[0]
         function wait(delayInMS) {
             return new Promise((resolve) => setTimeout(resolve, delayInMS));
         }
@@ -128,18 +130,19 @@ async function startScreenshare(driver: WebDriver) {
           console.log("after start recording")
           
           let recordedBlob = new Blob(recordedChunks, { type: "video/webm" });
-          async function sendRecording(recordedBlob){
+          async function sendRecording(recordedBlob,meetingId){
     const arrayBuffer = await recordedBlob.arrayBuffer()
     //send to node server
     await fetch('http://localhost:3000/upload',{
         method : "POST",
         headers : {
-            "Content-Type" : "application/octet-stream" 
+            "Content-Type" : "application/octet-stream",
+            "x-meeting-id" :  meetingId
         },
         body : arrayBuffer
     })
 }
-          await sendRecording(recordedBlob)
+          await sendRecording(recordedBlob,meetingId)
           console.log('recording sent')
           // Create download for video with audio
         //   const recording = document.createElement("video");
@@ -156,19 +159,19 @@ async function startScreenshare(driver: WebDriver) {
         //   audioStream.getTracks().forEach(track => track.stop());
         })
         
-    `)
+    `,meeting_id)
 
     console.log(response)
     driver.sleep(1000000)
 }
 
-async function main(meet_url : string) {
+async function main(meet_url : string , meeting_id : string) {
     
     const driver = await getDriver();
     await openMeet(driver,meet_url);
     await new Promise(x => setTimeout(x, 20000));
     // wait until admin lets u join
-    await startScreenshare(driver);    
+    await startScreenshare(driver,meeting_id);    
 }
 app.post('/register-user',async (req,res) => {
   const {clerkId,email} = req.body
@@ -196,20 +199,46 @@ app.post('/register-user',async (req,res) => {
      res.status(500).json({message : "Server Error"})
   }
 })
-app.post('/start-bot',(req,res) => {
-    console.log('inside the start bot')
-    const {meetUrl} = req.body
-    console.log(meetUrl, typeof(meetUrl))
-    main(meetUrl)
-    .then(() => {
-      console.log("Bot started and recording process initiated")
-      res.json({ success: true, message: "Bot started and recording process initiated." });
-    })
-    .catch(err => {
-      console.error("some error occured",err);
-      res.status(500).json({ success: false, error: "Failed to start bot" });
+app.post('/start-bot', async (req, res) => {
+  console.log('inside the start bot');
+  const { meetUrl, userId } = req.body;
+  let user = await User.findOne({clerkId : userId})
+  try {
+    const meeting = await Meeting.create({
+      userId : user?._id,
+      meetId: meetUrl,
+      status: "pending",
     });
-})
+
+    const meeting_id = String(meeting._id);
+
+    // Send response immediately
+    res.json({ id: meeting_id, data: meeting, message: "Meeting registered and bot starting..." });
+
+    // Start bot asynchronously
+    main(meetUrl, meeting_id)
+      .then(async () => {
+        console.log("Bot started and recording process initiated");
+        await Meeting.findOneAndUpdate(
+          { meetId: meetUrl, status: "pending" },
+          { status: "in-progress" },
+          { new: true }
+        );
+      })
+      .catch(async (err) => {
+        console.error("Some error occurred", err);
+        await Meeting.findOneAndUpdate(
+          { meetId: meetUrl },
+          { status: "failed" }
+        );
+      });
+
+  } catch (e) {
+    console.error("Error occurred while starting bot", e);
+    res.status(500).json({ message: "Server error from bot" });
+  }
+});
+
 app.listen(PORT,() => {
    console.log(`server is running on ${PORT}`)
 })
