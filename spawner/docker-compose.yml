@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  index-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: index-server
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src
+    restart: unless-stopped
+
+  upload-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.upload
+    container_name: upload-server
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src
+    restart: unless-stopped
