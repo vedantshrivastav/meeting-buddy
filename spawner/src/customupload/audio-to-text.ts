@@ -7,6 +7,9 @@ import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
 import Summary from "../db/models/summary";
 import Meeting from "../db/models/meeting";
+import mongoose from "mongoose";
+
+
 dotenv.config();
 
 const ASSEMBLY_API_KEY = process.env.ASSEMBLY_API_KEY!;
@@ -86,7 +89,9 @@ export async function finaltranscribtion(audioURL : string,meeting_id : string) 
     const summary = await summarizeWithGemini(transcription);
     console.log("📊 Summary:\n", summary);
     // store the summary in database 
-    await Summary.create({meeting_id,summary})
+    await mongoose.connect(process.env.MONGO_URI!)
+    console.log('MONGO CONNECTED IN THE UPLOAD SERVICE')
+    await Summary.create({meetingId : meeting_id,summary})
     console.log('summary generated in DB')
     await Meeting.findOneAndUpdate({meetId : meeting_id,status : 
       "in-progress"
