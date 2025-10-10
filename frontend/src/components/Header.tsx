@@ -19,7 +19,7 @@ const Header = () => {
 
       try {
         // Call your backend to create the user if not exists
-        await fetch("http://localhost:3001/register-user", {
+        await fetch("https://meeting-buddy.onrender.com/register-user", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

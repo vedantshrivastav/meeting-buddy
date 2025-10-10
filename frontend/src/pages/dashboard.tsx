@@ -18,7 +18,7 @@ export default function Dashboard() {
     if (!meetId.trim()) return alert("Enter a valid Google Meet ID");
     console.log("Google Meet ID entered:", meetId);
     // 👉 here you can call your backend service with meetId
-    await fetch("http://localhost:3001/start-bot", {
+    await fetch("https://meeting-buddy.onrender.com/start-bot", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ meetUrl: meetId, userId: user.id }),

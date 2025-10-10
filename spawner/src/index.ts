@@ -133,7 +133,7 @@ async function startScreenshare(driver: WebDriver , meeting_id : string) {
           async function sendRecording(recordedBlob,meetingId){
     const arrayBuffer = await recordedBlob.arrayBuffer()
     //send to node server
-    await fetch('http://localhost:3000/upload',{
+    await fetch('https://meeting-buddy-1.onrender.com',{
         method : "POST",
         headers : {
             "Content-Type" : "application/octet-stream",
