@@ -4,7 +4,7 @@ services:
   index-server:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.index
     container_name: index-server
     ports:
       - "3001:3001"
