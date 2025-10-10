@@ -1,3 +1,4 @@
+# This is the Dockerfile for the Index service
 FROM node:18
 
 WORKDIR /app
