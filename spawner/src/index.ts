@@ -179,7 +179,7 @@ app.post('/register-user',async (req,res) => {
     //check if the user exists
     const existing_user = await User.findOne({clerkId})
     if(existing_user) {
-      res.json({
+     return res.json({
         data : existing_user,
         message : "User already exists"
       })
